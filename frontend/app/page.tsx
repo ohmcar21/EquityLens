@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from "react";
 import HoldingsTable from "../components/HoldingsTable";
+import SectorAllocationChart from "../components/SectorAllocationChart";
 
 
 export default function Home() {
   const [health, setHealth] = useState<any>(null);
   const [summary, setSummary] = useState<any>(null);
+  const [sectorAllocation, setSectorAllocation] = useState<any>(null);
+  const [sectorLoading, setSectorLoading] = useState<boolean>(false);
+  const [sectorError, setSectorError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/v1/analytics/health")
@@ -14,7 +18,17 @@ export default function Home() {
       .then((data) => setHealth(data))
       .catch((err) => console.error(err));
 
-      fetch("http://127.0.0.1:8000/api/v1/portfolio/holdings")
+    setSectorLoading(true);
+    fetch("http://127.0.0.1:8000/api/v1/analytics/sector-allocation")
+      .then((res) => res.json())
+      .then((data) => setSectorAllocation(data))
+      .catch((err) => {
+        console.error(err);
+        setSectorError(err.message || "Failed to load sector allocation");
+      })
+      .finally(() => setSectorLoading(false));
+
+    fetch("http://127.0.0.1:8000/api/v1/portfolio/holdings")
       .then((res) => res.json())
       .then((data) => setSummary(data))
       .catch((err) => console.error(err));
@@ -92,6 +106,12 @@ export default function Home() {
         ) : (
           <p>Loading...</p>
         )}
+
+        <SectorAllocationChart
+          sectors={sectorAllocation?.sectors ?? []}
+          isLoading={sectorLoading}
+        />
+
         {/* Holdings Table placed below the summary */}
         <HoldingsTable holdings={summary?.holdings ?? []} />
       </div>
