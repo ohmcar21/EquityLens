@@ -3,10 +3,13 @@
 import { useEffect, useState } from "react";
 import HoldingsTable from "../components/HoldingsTable";
 import SectorAllocationChart from "../components/SectorAllocationChart";
+import HealthBreakdown from "../components/HealthBreakdown";
+import DiversificationAnalysis from "../components/DiversificationAnalysis";
 
 
 export default function Home() {
   const [health, setHealth] = useState<any>(null);
+  const [diversification, setDiversification] = useState<any>(null);
   const [summary, setSummary] = useState<any>(null);
   const [sectorAllocation, setSectorAllocation] = useState<any>(null);
   const [sectorLoading, setSectorLoading] = useState<boolean>(false);
@@ -32,13 +35,24 @@ export default function Home() {
       .then((res) => res.json())
       .then((data) => setSummary(data))
       .catch((err) => console.error(err));
+
+    fetch("http://127.0.0.1:8000/api/v1/analytics/diversification")
+      .then((res) => res.json())
+      .then((data) => setDiversification(data))
+      .catch((err) => console.error(err));
   }, []);
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      <h1 className="text-5xl font-bold mb-6 text-black">
-        AI Portfolio Intelligence Platform
-      </h1>
+      <div className="text-center mb-8">
+  <h1 className="text-4xl font-bold text-black">
+    EquityLens
+  </h1>
+
+  <p className="text-gray-600 mt-2">
+    AI-Powered Portfolio Intelligence Platform
+  </p>
+</div>
 
       <div className="bg-white p-8 rounded-xl shadow-md text-center min-w-[400px]">
         <h2 className="text-2xl font-semibold mb-4 text-black">
@@ -106,6 +120,10 @@ export default function Home() {
         ) : (
           <p>Loading...</p>
         )}
+
+        <HealthBreakdown health={health} />
+
+        <DiversificationAnalysis diversification={diversification} />
 
         <SectorAllocationChart
           sectors={sectorAllocation?.sectors ?? []}

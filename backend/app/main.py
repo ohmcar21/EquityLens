@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routes import portfolio, analytics
+from app.routes import portfolio, analytics, ai_reports
 
 settings = get_settings()
 
@@ -68,7 +68,7 @@ app.add_middleware(
 
 app.include_router(portfolio.router)
 app.include_router(analytics.router)
-
+app.include_router(ai_reports.router)
 
 # ── Root Health Check ─────────────────────────────────────────────────────────
 

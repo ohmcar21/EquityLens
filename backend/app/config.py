@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     # Fixed UUID for the demo user seeded in schema.sql
     demo_user_id: str = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
 
+    # ── LLM / Gemini ─────────────────────────────────────
+
+    gemini_api_key: str = ""
+    llm_temperature: float = 0.2
+    llm_max_output_tokens: int = 512
+
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
@@ -41,3 +47,5 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Cached settings instance — created once, reused everywhere."""
     return Settings()
+
+
