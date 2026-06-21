@@ -5,6 +5,7 @@ import HoldingsTable from "../components/HoldingsTable";
 import SectorAllocationChart from "../components/SectorAllocationChart";
 import HealthBreakdown from "../components/HealthBreakdown";
 import DiversificationAnalysis from "../components/DiversificationAnalysis";
+import AIInsights from "../components/AIInsights";
 
 
 export default function Home() {
@@ -132,6 +133,7 @@ export default function Home() {
 
         {/* Holdings Table placed below the summary */}
         <HoldingsTable holdings={summary?.holdings ?? []} />
+        <AIInsights />
       </div>
     </main>
   );

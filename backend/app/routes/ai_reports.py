@@ -9,7 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.services.ai_service import build_payload_and_prompt
+from app.services.ai_service import build_payload_and_prompt, generate_report
+from app.ai.gemini_client import GeminiClientError
 
 router = APIRouter(prefix="/api/v1/ai", tags=["AI"])
 
@@ -26,3 +27,24 @@ async def debug_ai_payload(db: AsyncSession = Depends(get_db)):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/report")
+async def create_ai_report(db: AsyncSession = Depends(get_db)):
+    """
+    Generate an AI portfolio report using Gemini.
+    """
+    try:
+        result = await generate_report(db)
+        return result
+
+    except GeminiClientError as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"AI service unavailable: {str(e)}"
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )

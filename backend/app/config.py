@@ -34,7 +34,7 @@ class Settings(BaseSettings):
 
     gemini_api_key: str = ""
     llm_temperature: float = 0.2
-    llm_max_output_tokens: int = 512
+    llm_max_output_tokens: int = 2000
 
     model_config = {
         "env_file": ".env",

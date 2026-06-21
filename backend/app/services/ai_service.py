@@ -17,6 +17,7 @@ from app.config import get_settings
 from app.services.analytics_service import AnalyticsService
 from app.broker.mock_broker import MockBroker
 from app.ai.prompt_templates import build_prompt
+from app.ai.gemini_client import generate_text as gemini_generate_text, GeminiClientError
 
 
 def _to_primitive(value: Any) -> Any:
@@ -118,3 +119,27 @@ async def build_payload_and_prompt(db: AsyncSession) -> Dict[str, Any]:
     prompt = build_prompt(payload)
 
     return {"payload": payload, "prompt": prompt}
+
+async def generate_report(db: AsyncSession) -> Dict[str, Any]:
+    """
+    Generate an AI report using Gemini.
+    """
+
+    payload_and_prompt = await build_payload_and_prompt(db)
+
+    payload = payload_and_prompt["payload"]
+    prompt = payload_and_prompt["prompt"]
+
+    result = await gemini_generate_text(prompt)
+
+    if not result.get("text"):
+        raise GeminiClientError("Gemini returned empty text")
+
+    return {
+        "report": result["text"],
+        "payload": payload,
+        "meta": {
+            "model": result["model"],
+            "prompt_chars": result["prompt_chars"],
+        },
+    }
