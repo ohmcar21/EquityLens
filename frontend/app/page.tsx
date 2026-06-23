@@ -1,46 +1,118 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import HoldingsTable from "../components/HoldingsTable";
 import SectorAllocationChart from "../components/SectorAllocationChart";
 import HealthBreakdown from "../components/HealthBreakdown";
 import DiversificationAnalysis from "../components/DiversificationAnalysis";
-import AIInsights from "../components/AIInsights";
+import AIInsights from "../components/AIInsights"; 
 
 
 export default function Home() {
   const [health, setHealth] = useState<any>(null);
   const [diversification, setDiversification] = useState<any>(null);
   const [summary, setSummary] = useState<any>(null);
+  const [uploading, setUploading] = useState(false);
   const [sectorAllocation, setSectorAllocation] = useState<any>(null);
   const [sectorLoading, setSectorLoading] = useState<boolean>(false);
   const [sectorError, setSectorError] = useState<string | null>(null);
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Extract fetch functions for reuse
+  const fetchHealth = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/analytics/health");
+      const data = await res.json();
+      setHealth(data);
+    } catch (err) {
+      console.error("Failed to fetch health:", err);
+    }
+  };
+
+  const fetchDiversification = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/analytics/diversification");
+      const data = await res.json();
+      setDiversification(data);
+    } catch (err) {
+      console.error("Failed to fetch diversification:", err);
+    }
+  };
+
+  const fetchSectorAllocation = async () => {
+    try {
+      setSectorLoading(true);
+      const res = await fetch("http://127.0.0.1:8000/api/v1/analytics/sector-allocation");
+      const data = await res.json();
+      setSectorAllocation(data);
+      setSectorError(null);
+    } catch (err) {
+      console.error("Failed to fetch sector allocation:", err);
+      setSectorError(err instanceof Error ? err.message : "Failed to load sector allocation");
+    } finally {
+      setSectorLoading(false);
+    }
+  };
+
+  const fetchHoldings = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/portfolio/holdings");
+      const data = await res.json();
+      setSummary(data);
+    } catch (err) {
+      console.error("Failed to fetch holdings:", err);
+    }
+  };
+
+  // Handle file upload - takes file as parameter, not from state
+  const handleUpload = async (file: File) => {
+    try {
+      setUploading(true);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/v1/portfolio/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Upload Success:", data);
+
+      // Update selected file state after successful upload
+      setSelectedFile(file);
+
+      // Refresh all dashboard data
+      await fetchHoldings();
+      await fetchHealth();
+      await fetchDiversification();
+      await fetchSectorAllocation();
+
+    } catch (error) {
+      console.error("Upload Error:", error);
+      alert(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setSelectedFile(null);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/v1/analytics/health")
-      .then((res) => res.json())
-      .then((data) => setHealth(data))
-      .catch((err) => console.error(err));
-
-    setSectorLoading(true);
-    fetch("http://127.0.0.1:8000/api/v1/analytics/sector-allocation")
-      .then((res) => res.json())
-      .then((data) => setSectorAllocation(data))
-      .catch((err) => {
-        console.error(err);
-        setSectorError(err.message || "Failed to load sector allocation");
-      })
-      .finally(() => setSectorLoading(false));
-
-    fetch("http://127.0.0.1:8000/api/v1/portfolio/holdings")
-      .then((res) => res.json())
-      .then((data) => setSummary(data))
-      .catch((err) => console.error(err));
-
-    fetch("http://127.0.0.1:8000/api/v1/analytics/diversification")
-      .then((res) => res.json())
-      .then((data) => setDiversification(data))
-      .catch((err) => console.error(err));
+    fetchHealth();
+    fetchDiversification();
+    fetchSectorAllocation();
+    fetchHoldings();
   }, []);
 
   return (
@@ -59,6 +131,37 @@ export default function Home() {
         <h2 className="text-2xl font-semibold mb-4 text-black">
           Portfolio Dashboard
         </h2>
+
+        <div className="flex justify-center mb-4">
+         <button
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+          >
+            {uploading
+              ? "Uploading..."
+              : selectedFile
+              ? "Analyze Portfolio"
+              : "Upload Portfolio"}
+          </button>
+ <input
+  ref={fileInputRef}
+  type="file"
+  accept=".csv,.xlsx"
+  className="hidden"
+  onChange={(e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleUpload(file);
+    }
+  }}
+/>
+      </div>
+
+{selectedFile && (
+  <p className="text-sm text-gray-600 mb-4">
+    Selected: {selectedFile.name}
+  </p>
+)}
 
         {summary && (
   <div className="grid grid-cols-2 gap-4 mb-6">

@@ -5,6 +5,8 @@ Minimal for Week 1 — no password hash or auth fields.
 The demo user is seeded in schema.sql with a fixed UUID.
 """
 
+from app.models.portfolio_snapshot import PortfolioSnapshot
+from app.models.portfolio_score import PortfolioScore
 import uuid
 from datetime import datetime, timezone
 
@@ -40,6 +42,8 @@ class User(Base):
     scores: Mapped[list["PortfolioScore"]] = relationship(  # noqa: F821
         back_populates="user", cascade="all, delete-orphan"
     )
-
+    snapshots: Mapped[list["PortfolioSnapshot"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
     def __repr__(self) -> str:
         return f"<User {self.email}>"

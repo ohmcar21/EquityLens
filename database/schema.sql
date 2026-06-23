@@ -86,6 +86,34 @@ CREATE INDEX idx_portfolio_scores_user_type ON portfolio_scores(user_id, score_t
 CREATE INDEX idx_portfolio_scores_calculated_at ON portfolio_scores(calculated_at DESC);
 
 -- ============================================================================
+-- PORTFOLIO SNAPSHOTS
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS portfolio_snapshots (
+    id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    snapshot_id         INTEGER NOT NULL,
+    user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    symbol              VARCHAR(50) NOT NULL,
+    exchange            VARCHAR(10) DEFAULT 'NSE',
+    quantity            INTEGER NOT NULL CHECK (quantity > 0),
+    average_price       DECIMAL(12, 2) NOT NULL,
+    current_price       DECIMAL(12, 2) NOT NULL,
+    sector              VARCHAR(100),
+    market_cap_category VARCHAR(20),
+    day_change_pct      DECIMAL(6, 2) DEFAULT 0,
+    created_at          TIMESTAMPTZ DEFAULT NOW(),
+
+    CONSTRAINT uq_snapshot_user_symbol_exchange
+    UNIQUE (snapshot_id, user_id, symbol, exchange)
+);
+
+CREATE INDEX idx_portfolio_snapshots_user_snapshot
+ON portfolio_snapshots(user_id, snapshot_id);
+
+CREATE INDEX idx_portfolio_snapshots_snapshot_id
+ON portfolio_snapshots(snapshot_id);
+
+
+-- ============================================================================
 -- SEED: Default demo user (for development)
 -- ============================================================================
 INSERT INTO users (id, email, full_name)

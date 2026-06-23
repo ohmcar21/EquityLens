@@ -74,3 +74,17 @@ class AnalyticsSummaryResponse(BaseModel):
     diversification: DiversificationScoreResponse
     health: HealthScoreResponse
     sector_allocation: SectorAllocationResponse
+
+# ── Portfolio Comparison ─────────────────────────────────────────────────────
+
+class QuantityChange(BaseModel):
+    symbol: str
+    previous_quantity: int
+    current_quantity: int
+    change: int
+
+
+class PortfolioComparisonResponse(BaseModel):
+    added_holdings: list[str]
+    removed_holdings: list[str]
+    quantity_changes: list[QuantityChange]

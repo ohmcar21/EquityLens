@@ -10,6 +10,8 @@ from decimal import Decimal
 from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, desc
+from app.models.portfolio_snapshot import PortfolioSnapshot
 
 from app.analytics.diversification import calculate_diversification_score
 from app.analytics.health_score import calculate_health_score
@@ -32,6 +34,83 @@ class AnalyticsService:
         """Fetch holdings and convert to analytics-compatible dicts."""
         holdings = await self.portfolio_service.get_holdings(user_id)
         return self.portfolio_service.holdings_to_analytics_format(holdings)
+
+    async def get_portfolio_comparison(self, user_id: uuid.UUID) -> dict:
+        result = await self.db.execute(
+            select(PortfolioSnapshot.snapshot_id)
+            .where(PortfolioSnapshot.user_id == user_id)
+            .distinct()
+            .order_by(desc(PortfolioSnapshot.snapshot_id))
+        )
+
+        snapshot_ids = result.scalars().all()
+
+        if len(snapshot_ids) < 2:
+            return {
+                "added_holdings": [],
+                "removed_holdings": [],
+                "quantity_changes": [],
+            }
+
+        latest_snapshot_id = snapshot_ids[0]
+        previous_snapshot_id = snapshot_ids[1]
+
+        latest_result = await self.db.execute(
+            select(PortfolioSnapshot)
+            .where(
+                PortfolioSnapshot.user_id == user_id,
+                PortfolioSnapshot.snapshot_id ==latest_snapshot_id
+            )
+        )
+        latest_holdings = latest_result.scalars().all()
+
+        previous_result = await self.db.execute(
+            select(PortfolioSnapshot)
+            .where(
+                PortfolioSnapshot.user_id == user_id,
+                PortfolioSnapshot.snapshot_id == previous_snapshot_id,
+            )
+        )
+
+        previous_holdings = previous_result.scalars().all()
+
+        latest_map = {
+            holding.symbol: holding.quantity
+            for holding in latest_holdings
+        }
+
+        previous_map={
+            holding.symbol: holding.quantity
+            for holding in previous_holdings
+        }
+        added_holdings = [
+            symbol
+            for symbol in latest_map
+            if symbol not in previous_map
+        ]
+
+        removed_holdings = [
+            symbol
+            for symbol in previous_map
+            if symbol not in latest_map
+        ]  
+
+        quantity_changes = []
+        for symbol in latest_map:
+            if symbol in previous_map:
+                if latest_map[symbol] != previous_map[symbol]:
+                    quantity_changes.append({
+                        "symbol": symbol,
+                        "previous_quantity": previous_map[symbol],
+                        "current_quantity": latest_map[symbol],
+                        "change": latest_map[symbol] - previous_map[symbol],
+                    })
+        return {
+            "added_holdings": added_holdings,
+            "removed_holdings": removed_holdings,
+            "quantity_changes": quantity_changes,
+        }
+            
 
     async def get_diversification_score(self, user_id: uuid.UUID) -> dict:
         """

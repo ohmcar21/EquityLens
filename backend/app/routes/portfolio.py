@@ -6,8 +6,10 @@ Auth is skipped for Week 1; we use the demo user ID directly.
 """
 
 import uuid
+import pandas as pd
+from io import BytesIO
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -15,6 +17,8 @@ from app.database import get_db
 from app.schemas.holding import HoldingResponse, HoldingsSummary
 from app.services.portfolio_service import PortfolioService
 from app.broker.mock_broker import MockBroker
+
+
 
 router = APIRouter(prefix="/api/v1/portfolio", tags=["Portfolio"])
 settings = get_settings()
@@ -117,3 +121,28 @@ async def get_holding_by_symbol(
         )
 
     return HoldingResponse.model_validate(holding)
+
+
+
+@router.post("/upload")
+async def upload_portfolio(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    contents = await file.read()
+    
+    df = pd.read_csv(BytesIO(contents))
+
+    records = df.to_dict(orient="records")
+    service = PortfolioService(db, _get_broker())
+    user_id = uuid.UUID(settings.demo_user_id)
+    uploaded_holdings = await service.upload_holdings(
+        user_id,
+        records,
+    )
+
+    return {
+    "filename": file.filename,
+    "rows": len(df),
+    "first_record": records[0]
+}

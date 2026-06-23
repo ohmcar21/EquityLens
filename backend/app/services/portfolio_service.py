@@ -8,11 +8,12 @@ API layer. Routes delegate to this service; this service owns the logic.
 import uuid
 from decimal import Decimal
 
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.broker.interface import BrokerInterface
 from app.models.holding import Holding
+from app.models.portfolio_snapshot import PortfolioSnapshot
 
 
 class PortfolioService:
@@ -60,6 +61,63 @@ class PortfolioService:
 
         await self.db.flush()  # assigns IDs without committing
         return db_holdings
+    
+    async def upload_holdings(
+            self,
+            user_id: uuid.UUID,
+            records: list[dict],
+        ) -> list[Holding]:
+
+            # 1. Query max snapshot_id and calculate next_snapshot_id
+            result = await self.db.execute(
+                select(func.max(PortfolioSnapshot.snapshot_id))
+                .where(PortfolioSnapshot.user_id == user_id)
+            )
+            max_snapshot_id = result.scalar()
+            next_snapshot_id = 1 if max_snapshot_id is None else max_snapshot_id + 1
+
+            # 2. Create PortfolioSnapshot rows from records
+            for record in records:
+                snapshot = PortfolioSnapshot(
+                    user_id=user_id,
+                    snapshot_id=next_snapshot_id,
+                    symbol=record["symbol"],
+                    exchange="NSE",
+                    quantity=record["quantity"],
+                    average_price=record["avg_price"],
+                    current_price=record["current_price"],
+                    sector="Unknown",
+                    market_cap_category="LARGE",
+                    day_change_pct=0,
+                )
+                self.db.add(snapshot)
+
+            await self.db.execute(
+            delete(Holding).where(Holding.user_id == user_id)
+            )
+
+            db_holdings = []
+
+            for record in records:
+                holding = Holding(
+                    user_id=user_id,
+                    symbol=record["symbol"],
+                    exchange="NSE",
+                    quantity=record["quantity"],
+                    average_price=record["avg_price"],
+                    current_price=record["current_price"],
+                    sector="Unknown",
+                    market_cap_category="LARGE",
+                    day_change_pct=0,
+                )
+
+                self.db.add(holding)
+                db_holdings.append(holding)
+
+            await self.db.flush()
+            return db_holdings
+
+            
 
     async def get_holdings(self, user_id: uuid.UUID) -> list[Holding]:
         """

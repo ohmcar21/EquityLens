@@ -20,6 +20,7 @@ from app.schemas.analytics import (
     HealthScoreResponse,
     SectorAllocation,
     SectorAllocationResponse,
+    PortfolioComparisonResponse,
 )
 from app.services.analytics_service import AnalyticsService
 from app.broker.mock_broker import MockBroker
@@ -115,6 +116,20 @@ async def get_sector_allocation(db: AsyncSession = Depends(get_db)):
         return _build_sector_response(result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get(
+    "/history/compare",
+    response_model=PortfolioComparisonResponse,
+    summary="Compare latest portfolio snapshot with previous snapshot",
+)
+async def compare_portfolio_history(db: AsyncSession = Depends(get_db)):
+    user_id = uuid.UUID(settings.demo_user_id)
+    service = AnalyticsService(db, _get_broker())
+
+    try:
+        return await service.get_portfolio_comparison(user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))        
 
 
 # ── Response Builders ─────────────────────────────────────────────────────────
