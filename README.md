@@ -1,76 +1,290 @@
-# AI Portfolio Intelligence Platform — Backend (Week 1 MVP)
+# 📈 EquityLens
 
-This is the backend for the AI Portfolio Intelligence Platform, built using **FastAPI**, **SQLAlchemy (Async)**, and **PostgreSQL**.
+### AI Portfolio Intelligence Platform
 
-The architecture uses the **Strategy Pattern** to abstract broker integrations, allowing the platform to run completely off realistic mock data (15 Indian stocks across 6 sectors) without requiring active Zerodha Kite Connect credentials.
+EquityLens is a full-stack AI-powered portfolio intelligence platform that helps investors understand the quality of their portfolio through advanced analytics, historical comparisons, sector analysis, and AI-generated insights.
 
----
+Unlike traditional portfolio trackers that only display holdings and returns, EquityLens focuses on **portfolio intelligence** by converting raw investment data into meaningful, actionable insights.
 
-## Technical Stack
-- **Framework**: FastAPI (Asynchronous)
-- **Database ORM**: SQLAlchemy 2.0 (Async) + asyncpg
-- **Database**: PostgreSQL 15+
-- **Settings Management**: Pydantic Settings v2
+> **Built with Next.js, FastAPI, PostgreSQL, Groq AI, SQLAlchemy, and TypeScript.**
 
 ---
 
-## Getting Started
+## 📸 Dashboard Preview
 
-### 1. Prerequisites
-- Python 3.10 or higher installed
-- PostgreSQL database running locally
+> *Dashboard screenshots coming soon.*
 
-### 2. Setup Environment
-1. Copy the example environment file:
-   ```bash
-   cp backend/.env.example backend/.env
-   ```
-2. Modify `backend/.env` with your database credentials. For example:
-   ```env
-   DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/portfolio_intel
-   BROKER_MODE=mock
-   ```
+---
 
-### 3. Database Schema Setup
-Initialize the database using the schema DDL script. Run the SQL script located at:
-- [database/schema.sql](file:///c:/Users/ohmcar/Desktop/project%20w%20aneesh/Banking/database/schema.sql)
+# ✨ Features
 
-This script:
-1. Creates the `users`, `holdings`, and `portfolio_scores` tables.
-2. Seeds a demo user with UUID `a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11`.
+* 📂 CSV Portfolio Upload
+* 🤖 AI-Powered Portfolio Insights
+* 📊 Portfolio Health Score
+* 🎯 Diversification Analysis
+* 🏢 Sector Allocation Analysis
+* 📈 Historical Portfolio Comparison
+* 💾 Automatic Historical Snapshot Tracking
+* 🔌 Broker-Ready Architecture
+* 📱 Responsive Dashboard
+* ⚡ FastAPI + PostgreSQL Backend
 
-### 4. Installation
-Install python dependencies in your environment:
-```bash
-pip install -r backend/requirements.txt
+---
+
+# 🚀 Tech Stack
+
+## Frontend
+
+* Next.js
+* React
+* TypeScript
+* Tailwind CSS
+* Recharts
+
+## Backend
+
+* FastAPI
+* SQLAlchemy (Async)
+* Pydantic
+* PostgreSQL
+* asyncpg
+
+## AI
+
+* Groq LLM
+
+## Architecture
+
+* Service-Oriented Architecture
+* Broker Abstraction Layer
+* Parent-Managed State Architecture
+* Historical Snapshot Engine
+
+---
+
+# 🏗️ System Architecture
+
+```text
+                     CSV Upload
+                          │
+                          ▼
+                 Portfolio Parser
+                          │
+                          ▼
+             Portfolio Analytics Engine
+                          │
+          ┌───────────────┴───────────────┐
+          ▼                               ▼
+ Historical Snapshot Engine        AI Insights Engine
+          │                               │
+          └───────────────┬───────────────┘
+                          ▼
+                  PostgreSQL Database
+                          │
+                          ▼
+               Next.js Interactive Dashboard
 ```
 
-### 5. Running the API Server
-Start the development server using uvicorn:
+---
+
+# 📊 Core Features
+
+| Feature                         | Status       |
+| ------------------------------- | ------------ |
+| CSV Portfolio Upload            | ✅            |
+| Portfolio Analytics             | ✅            |
+| AI Portfolio Insights           | ✅            |
+| Portfolio Health Score          | ✅            |
+| Diversification Analysis        | ✅            |
+| Sector Allocation               | ✅            |
+| Historical Portfolio Comparison | ✅            |
+| Historical Snapshot Engine      | ✅            |
+| Broker Abstraction Layer        | ✅            |
+| Responsive Dashboard            | ✅            |
+| Live Broker Integration         | 🚧 Version 2 |
+
+---
+
+# 📈 Portfolio Analytics
+
+EquityLens evaluates portfolio quality using multiple analytical models:
+
+* Portfolio Health Score
+* Diversification Analysis
+* Sector Allocation Analysis
+* Stock Concentration Analysis
+* Historical Portfolio Comparison
+* AI-Generated Portfolio Insights
+
+These metrics provide investors with a deeper understanding of portfolio quality beyond simple profit and loss.
+
+---
+
+# 📂 Project Structure
+
+```text
+EquityLens/
+│
+├── frontend/
+│   ├── app/
+│   ├── components/
+│   ├── services/
+│   └── public/
+│
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── brokers/
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   └── core/
+│   │
+│   ├── requirements.txt
+│   └── .env
+│
+├── database/
+│
+└── README.md
+```
+
+---
+
+# ⚙️ Getting Started
+
+## Prerequisites
+
+* Python 3.10+
+* Node.js 18+
+* PostgreSQL 15+
+
+---
+
+## Clone the Repository
+
+```bash
+git clone <repository-url>
+
+cd EquityLens
+```
+
+---
+
+## Backend Setup
+
 ```bash
 cd backend
+
+pip install -r requirements.txt
+```
+
+Create a `.env` file:
+
+```env
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/portfolio_intel
+
+BROKER_MODE=mock
+```
+
+Initialize the database using the SQL schema:
+
+```text
+database/schema.sql
+```
+
+Run the backend:
+
+```bash
 uvicorn app.main:app --reload
 ```
 
-The API docs will be available at:
-- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
-- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+Backend URLs:
+
+```
+Swagger UI
+http://localhost:8000/docs
+
+ReDoc
+http://localhost:8000/redoc
+```
 
 ---
 
-## Core Analytics Features
+## Frontend Setup
 
-### 1. Diversification Score (0–100)
-Calculated as a weighted average of four dimensions:
-- **Sector Spread (30%)**: Normalized Shannon Entropy showing how evenly distributed holdings are across sectors.
-- **Stock Concentration (30%)**: Inverse Herfindahl-Hirschman Index (HHI) reflecting single-stock concentration risk.
-- **Market Cap Mix (20%)**: Balance against ideal allocations of Large (60%), Mid (27.5%), and Small cap (12.5%).
-- **Correlation Risk (20%)**: Inter-sector correlation penalty based on domain-mapped sector relationships.
+```bash
+cd frontend
 
-### 2. Portfolio Health Score (0–100)
-Composite score summarizing overall portfolio robustness:
-- **Diversification (25%)**: Incorporates the Diversification Score.
-- **Volatility (20%)**: Annualized portfolio volatility based on historical returns (90-day mock returns).
-- **Drawdown Risk (20%)**: Maximum portfolio-level drawdown simulated over the past 90 days.
-- **Liquidity (15%)**: Weight in large-cap NSE liquid stocks.
-- **Rebalancing Need (20%)**: Degree of drift from an equal-weighted target allocation.
+npm install
+
+npm run dev
+```
+
+Open:
+
+```
+http://localhost:3000
+```
+
+---
+
+# 📌 Workflow
+
+```text
+Upload Portfolio CSV
+          │
+          ▼
+Backend Parses Holdings
+          │
+          ▼
+Portfolio Analytics Engine
+          │
+          ▼
+Historical Snapshot Storage
+          │
+          ▼
+AI Insight Generation
+          │
+          ▼
+Interactive Dashboard
+```
+
+---
+
+# 🎯 Why EquityLens?
+
+Most investment platforms show **what you own**.
+
+EquityLens helps investors understand **how healthy their portfolio actually is** by combining portfolio analytics, historical tracking, diversification analysis, and AI-generated insights into a single intelligent dashboard.
+
+---
+
+# 🚀 Future Roadmap
+
+* Live Broker Integration
+* Multi-Broker Support
+* User Authentication
+* Cloud Deployment
+* Advanced Portfolio Analytics
+* Portfolio Timeline Visualization
+* PDF Portfolio Reports
+
+---
+
+# 🤝 Contributing
+
+Contributions, suggestions, and improvements are welcome.
+
+Feel free to fork the repository and submit a pull request.
+
+---
+
+# 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+# 👨‍💻 Built With
+
+**Next.js • React • TypeScript • FastAPI • PostgreSQL • SQLAlchemy • Groq AI • Tailwind CSS**
