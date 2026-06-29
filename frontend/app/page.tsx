@@ -6,6 +6,7 @@ import SectorAllocationChart from "../components/SectorAllocationChart";
 import HealthBreakdown from "../components/HealthBreakdown";
 import DiversificationAnalysis from "../components/DiversificationAnalysis";
 import AIInsights from "../components/AIInsights"; 
+import HistoricalComparison from "../components/HistoricalComparison";
 
 
 export default function Home() {
@@ -16,6 +17,8 @@ export default function Home() {
   const [sectorAllocation, setSectorAllocation] = useState<any>(null);
   const [sectorLoading, setSectorLoading] = useState<boolean>(false);
   const [sectorError, setSectorError] = useState<string | null>(null);
+
+  const [comparison, setComparison] = useState<any>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -54,6 +57,19 @@ export default function Home() {
       setSectorError(err instanceof Error ? err.message : "Failed to load sector allocation");
     } finally {
       setSectorLoading(false);
+    }
+  };
+
+  const fetchComparison = async () => {
+    try {
+      const res = await fetch(
+        "http://127.0.0.1:8000/api/v1/analytics/history/compare"
+      );
+
+      const data = await res.json();
+      setComparison(data);
+    } catch (err) {
+      console.error("Failed to fetch comparison:", err);
     }
   };
 
@@ -98,6 +114,7 @@ export default function Home() {
       await fetchHealth();
       await fetchDiversification();
       await fetchSectorAllocation();
+      await fetchComparison();
 
     } catch (error) {
       console.error("Upload Error:", error);
@@ -113,6 +130,7 @@ export default function Home() {
     fetchDiversification();
     fetchSectorAllocation();
     fetchHoldings();
+    fetchComparison();
   }, []);
 
   return (
@@ -235,6 +253,8 @@ export default function Home() {
         />
 
         {/* Holdings Table placed below the summary */}
+
+        <HistoricalComparison data={comparison} />
         <HoldingsTable holdings={summary?.holdings ?? []} />
         <AIInsights />
       </div>
