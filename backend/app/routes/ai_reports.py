@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.services.ai_service import build_payload_and_prompt, generate_report
-from app.ai.gemini_client import GeminiClientError
+from app.ai.groq_client import GroqClientError
 
 router = APIRouter(prefix="/api/v1/ai", tags=["AI"])
 
@@ -31,13 +31,14 @@ async def debug_ai_payload(db: AsyncSession = Depends(get_db)):
 @router.post("/report")
 async def create_ai_report(db: AsyncSession = Depends(get_db)):
     """
-    Generate an AI portfolio report using Gemini.
+    Generate an AI portfolio report using Groq.
     """
     try:
         result = await generate_report(db)
         return result
 
-    except GeminiClientError as e:
+    except GroqClientError as e:
+        print(f"DEBUG [ai_reports.py]: Caught GroqClientError: {repr(e)}")
         raise HTTPException(
             status_code=502,
             detail=f"AI service unavailable: {str(e)}"

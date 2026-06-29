@@ -17,7 +17,7 @@ from app.config import get_settings
 from app.services.analytics_service import AnalyticsService
 from app.broker.mock_broker import MockBroker
 from app.ai.prompt_templates import build_prompt
-from app.ai.gemini_client import generate_text as gemini_generate_text, GeminiClientError
+from app.ai.groq_client import generate_text as groq_generate_text, GroqClientError
 
 
 def _to_primitive(value: Any) -> Any:
@@ -122,7 +122,7 @@ async def build_payload_and_prompt(db: AsyncSession) -> Dict[str, Any]:
 
 async def generate_report(db: AsyncSession) -> Dict[str, Any]:
     """
-    Generate an AI report using Gemini.
+    Generate an AI report using Groq
     """
 
     payload_and_prompt = await build_payload_and_prompt(db)
@@ -130,10 +130,10 @@ async def generate_report(db: AsyncSession) -> Dict[str, Any]:
     payload = payload_and_prompt["payload"]
     prompt = payload_and_prompt["prompt"]
 
-    result = await gemini_generate_text(prompt)
+    result = await groq_generate_text(prompt)
 
     if not result.get("text"):
-        raise GeminiClientError("Gemini returned empty text")
+        raise GroqClientError("Groq returned empty text")
 
     return {
         "report": result["text"],

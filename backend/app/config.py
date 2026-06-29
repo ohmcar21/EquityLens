@@ -30,9 +30,11 @@ class Settings(BaseSettings):
     # Fixed UUID for the demo user seeded in schema.sql
     demo_user_id: str = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
 
-    # ── LLM / Gemini ─────────────────────────────────────
+    # ── LLM / Groq ─────────────────────────────────────
 
-    gemini_api_key: str = ""
+    # LLM / Groq
+
+    groq_api_key: str = ""
     llm_temperature: float = 0.2
     llm_max_output_tokens: int = 2000
 
